@@ -1,8 +1,3 @@
-'''
-COMP9321 2019 Term 1 Assignment Two Code Template
-Student Name: Rishap Sharma
-Student ID: z5202535
-'''
 from datetime import datetime
 from flask import Flask, request
 from flask_restplus import Api, Resource
@@ -38,19 +33,12 @@ def create_db(db_file):
     db_conn.commit()
 
 
-def get_db_connection():
-    db_conn = sqlite3.connect(DB_FILE)
-    db_curr = db_conn.cursor()
-    return db_conn, db_curr
-
-
 @api.route('/<string:collection_name>')
 class WorldBankCollectionsList(Resource):
     @staticmethod
     def get(collection_name):
-        db_conn = sqlite3.connect(DB_FILE)
-        db_curr = db_conn.cursor()
-
+        global db_conn
+        global db_curr
         db_curr.execute(
             """SELECT creation_time, collection_id, collection_name, indicator 
             FROM COLLECTIONS WHERE collection_name={0}"""
@@ -76,8 +64,8 @@ class WorldBankCollectionsList(Resource):
         indicator_id = request.form['data']
 
         # Check_collection entry already exists based on collection_name and indicator_id
-        db_conn = sqlite3.connect(DB_FILE)
-        db_curr = db_conn.cursor()
+        global db_conn
+        global db_curr
 
         db_curr.execute(
             """SELECT creation_time, collection_id, collection_name, indicator 
@@ -129,8 +117,6 @@ class WorldBankCollectionsList(Resource):
         collection["indicator"] = indicator_id
         collection["indicator_value"] = indicator_value
 
-        db_conn = sqlite3.connect(DB_FILE)
-        db_curr = db_conn.cursor()
         db_curr.execute(
             """INSERT INTO COLLECTIONS (indicator, indicator_value, creation_time, collection_name, entries) 
             VALUES ({0}, {1}, {2}, {3}, {4})""".format(
@@ -165,7 +151,7 @@ class WorldBankCollectionsList(Resource):
                 "'" + collection_name + "'"
             )
         )
-        db_curr.commit()
+        db_conn.commit()
         if db_curr.rowcount > 0:
             return {"message": "Collection = {0} is removed from the database!".format(collection_id)}, 200
         else:
