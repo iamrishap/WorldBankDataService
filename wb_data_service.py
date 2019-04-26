@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Flask, request
-from flask_restplus import Api, Resource
+from flask_restplus import Api, Resource, fields
 import heapq
 import json
 import re
@@ -16,6 +16,12 @@ api = Api(app, version='1.0', default="REST API Endpoints", default_label=None,
                       'the world, and allow the consumers to access the data through a REST API')
 DB_FILE = None
 REQUEST_HEADERS = {"content-type": "application/json"}
+indicator_id = ''
+
+resource_fields = api.model('DataService', {
+    'collection_id': fields.String
+})
+
 
 
 def create_db(db_file):
@@ -35,10 +41,6 @@ def create_db(db_file):
     db_conn.close()
 
 
-@api.doc(params={
-                    "collection_id": "ID of the Collection. It specifies an Resource in the Collection",
-                }
-         )
 @api.route('/<string:collection_name>')
 class WorldBankCollectionsList(Resource):
     @staticmethod
@@ -67,9 +69,9 @@ class WorldBankCollectionsList(Resource):
             return {}, 204
 
     @staticmethod
+    @api.expect(resource_fields)
     def post(collection_name):
-        indicator_id = request.form['data']
-
+        indicator_id = request.json['collection_id']
         # Check_collection entry already exists based on collection_name and indicator_id
         db_conn = sqlite3.connect(DB_FILE)
         db_curr = db_conn.cursor()
